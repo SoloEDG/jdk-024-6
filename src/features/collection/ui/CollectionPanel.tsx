@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { BookOpen, Backpack, ArrowUpRight } from "lucide-react";
+import { BookOpen, Backpack, ArrowUpRight, Camera } from "lucide-react";
 import type { GameDocument } from "../../../shared/types";
 import type { Command } from "../../../shared/commands";
 import { fishCatalog, species } from "../../../shared/catalog";
 import { bagWeight } from "../lib/records";
 import { FishIllustration } from "./FishIllustration";
+import { PhotoView } from "../../camera";
 export function CollectionPanel({
   doc,
   send,
@@ -15,6 +16,9 @@ export function CollectionPanel({
   const [tab, setTab] = useState<"atlas" | "bag">("atlas");
   const [detail, setDetail] = useState<string | null>(null);
   const fish = detail ? species(detail) : null;
+  const coverPhoto = doc.cover
+    ? doc.photos.find((p) => p.id === doc.cover?.photoId)
+    : undefined;
   return (
     <section className="collection-panel">
       <div className="section-title">
@@ -42,22 +46,48 @@ export function CollectionPanel({
       </div>
       {tab === "atlas" ? (
         <>
+          <div className="cover-slot">
+            {coverPhoto ? (
+              <>
+                <PhotoView photo={coverPhoto} w={360} h={216} className="cover-img" />
+                <span className="cover-caption">
+                  图鉴封面 · {coverPhoto.record.T}s 曝光 ·{" "}
+                  {Math.round(coverPhoto.record.cam.fo[0] / 10)}mm
+                </span>
+              </>
+            ) : (
+              <a className="cover-empty" href="#camera">
+                <Camera size={18} />
+                <span>图鉴封面虚位以待</span>
+                <small>用水下镜头拍下第一张封面吧</small>
+              </a>
+            )}
+          </div>
           <div className="atlas-grid">
-            {fishCatalog.map((f) => (
-              <button
-                className="fish-tile"
-                key={f.id}
-                onClick={() => setDetail(detail === f.id ? null : f.id)}
-                aria-expanded={detail === f.id}
-              >
-                <FishIllustration fish={f} locked={!doc.journal[f.id]} />
-                <span>{doc.journal[f.id] ? f.name : "待发现"}</span>
-                <small>
-                  {f.rarity}
-                  <ArrowUpRight size={10} />
-                </small>
-              </button>
-            ))}
+            {fishCatalog.map((f) => {
+              const mark = doc.photographed[f.id];
+              return (
+                <button
+                  className="fish-tile"
+                  key={f.id}
+                  onClick={() => setDetail(detail === f.id ? null : f.id)}
+                  aria-expanded={detail === f.id}
+                >
+                  <FishIllustration fish={f} locked={!doc.journal[f.id]} />
+                  <span>{doc.journal[f.id] ? f.name : "待发现"}</span>
+                  <small>
+                    {f.rarity}
+                    <ArrowUpRight size={10} />
+                  </small>
+                  {mark && (
+                    <em className={"cam-mark " + mark.clarity}>
+                      <Camera size={9} />
+                      {mark.clarity === "clear" ? "清晰识别" : "镜头目击"}
+                    </em>
+                  )}
+                </button>
+              );
+            })}
           </div>
           {fish && (
             <div className="fish-detail">
@@ -68,6 +98,8 @@ export function CollectionPanel({
                 {doc.journal[fish.id]
                   ? `捕获 ${doc.journal[fish.id]?.count} 尾 · 最大 ${doc.journal[fish.id]?.best.toFixed(2)} kg`
                   : "尝试探索它偏爱的水域与鱼饵。"}
+                {doc.photographed[fish.id] &&
+                  ` · 镜头${doc.photographed[fish.id]?.clarity === "clear" ? "已清晰识别" : "曾目击"}`}
               </small>
             </div>
           )}

@@ -9,6 +9,7 @@ import {
   ArrowUpRight,
   X,
   Compass,
+  Camera,
 } from "lucide-react";
 import { isBusy } from "../shared/initial";
 import { WaterPanel, WaterConditions, water } from "../features/waters";
@@ -16,6 +17,7 @@ import { BaitPanel, RigPanel } from "../features/tackle";
 import { LakeScene, FishingPanel } from "../features/fishing";
 import { CollectionPanel } from "../features/collection";
 import { ChallengePanel, TripStats } from "../features/challenges";
+import { CameraPanel } from "../features/camera";
 import { useGame } from "./useGame";
 export function App() {
   const { state, send, saved } = useGame();
@@ -41,6 +43,10 @@ export function App() {
           <a className="nav-active" href="#fishing">
             <Compass size={16} />
             去钓鱼
+          </a>
+          <a href="#camera">
+            <Camera size={16} />
+            水下摄影
           </a>
           <a href="#collection">
             <BookOpen size={16} />
@@ -117,6 +123,7 @@ export function App() {
               <WaterConditions spot={doc.spot} />
               <FishingPanel doc={doc} session={session} send={send} />
             </section>
+            <CameraPanel doc={doc} camera={state.camera} send={send} />
             <div className="equipment-row">
               <BaitPanel doc={doc} busy={busy} send={send} />
               <RigPanel doc={doc} busy={busy} send={send} />
@@ -185,6 +192,9 @@ export function App() {
               </li>
               <li>
                 收获会保存到背包和图鉴。捕获两尾解锁溪流，五尾解锁深水。放流保留图鉴记录。
+              </li>
+              <li>
+                水下镜头已布置在钓点：调好焦距、对焦与曝光，拍下整段光迹。清晰识别的鱼种会收录进图鉴摄影记录，拍照不算捕获也不入袋。
               </li>
             </ol>
             <p>

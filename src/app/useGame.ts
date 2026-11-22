@@ -1,5 +1,6 @@
 import { useEffect, useReducer, useRef, useState } from "react";
 import { idleSession } from "../shared/initial";
+import { initialCamera } from "../features/camera";
 import { gameReducer } from "./gameReducer";
 import { loadGame, saveGame } from "./storage";
 export function useGame() {
@@ -8,6 +9,7 @@ export function useGame() {
   const [state, send] = useReducer(gameReducer, loaded.current, (initial) => ({
     ...initial,
     session: idleSession(),
+    camera: initialCamera(initial.doc),
   }));
   const recovery = useRef(loaded.current.recovery === true);
   const [saved, setSaved] = useState(!recovery.current);

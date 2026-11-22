@@ -1,4 +1,4 @@
-import type { BaitId, SpotId } from "./types";
+import type { BaitId, CamSettings, SpotId } from "./types";
 export type Command =
   | { type: "spot"; id: SpotId }
   | { type: "bait"; id: BaitId }
@@ -12,4 +12,12 @@ export type Command =
   | { type: "next" }
   | { type: "release"; id: string }
   | { type: "claim"; id: string }
-  | { type: "resupply" };
+  | { type: "resupply" }
+  | { type: "cam-set"; patch: Partial<CamSettings> }
+  | { type: "cam-shutter" }
+  | { type: "cam-cancel" }
+  | { type: "tray-close" }
+  | { type: "frame-developed"; id: string }
+  | { type: "photo-accept"; id: string; cover: boolean }
+  | { type: "photo-cover"; id: string }
+  | { type: "photo-remove"; id: string };

@@ -12,6 +12,10 @@ export function newDocument(): GameDocument {
     journal: {},
     stats: { casts: 0, catches: 0, escapes: 0, released: 0 },
     claimed: [],
+    photos: [],
+    cover: null,
+    photoSeq: 0,
+    photographed: {},
   };
 }
 export function idleSession(): Session {

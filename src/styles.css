@@ -1565,3 +1565,361 @@ main {
     animation: notice-out 1ms 5s forwards !important;
   }
 }
+/* ———— 水下摄影机 ———— */
+.camera-panel {
+  margin-top: 20px;
+  background: #f9fbf8;
+  border: 1px solid #dce6e2;
+  border-radius: 8px;
+  padding: 18px;
+}
+.camera-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 18px;
+  margin-top: 16px;
+}
+.viewfinder {
+  position: relative;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #33555e;
+  align-self: start;
+}
+.viewfinder canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.vf-hud {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  gap: 6px;
+}
+.vf-hud span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  color: #e8f0e4;
+  background: #1d383da8;
+  padding: 4px 8px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+}
+.vf-rec {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  color: #f3e9dd;
+  background: #40201ea0;
+  padding: 7px 10px;
+  border-radius: 4px;
+}
+.vf-rec i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e0694c;
+  animation: rec-blink 1s infinite alternate;
+  flex-shrink: 0;
+}
+.vf-rec progress {
+  flex: 1;
+}
+.vf-hint {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  font-size: 9px;
+  color: #e6efe2;
+  background: #274b42b8;
+  padding: 6px 9px;
+  border-radius: 3px;
+}
+@keyframes rec-blink {
+  to {
+    opacity: 0.25;
+  }
+}
+.cam-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cam-controls label {
+  display: block;
+  font-size: 10px;
+  color: #7c9189;
+}
+.cam-controls output {
+  float: right;
+  color: #466e63;
+  font-size: 10px;
+}
+.cam-controls input[type="range"] {
+  display: block;
+  margin-top: 5px;
+}
+.pan-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.pan-row .icon-btn {
+  padding: 4px;
+  color: #6b8b83;
+}
+.pan-row input {
+  flex: 1;
+}
+.budget {
+  font-size: 9px;
+  color: #8a9d97;
+}
+.budget span {
+  display: block;
+  margin-bottom: 4px;
+}
+.cam-warn {
+  font-size: 9px;
+  line-height: 1.7;
+  color: #a05f3c;
+  background: #f6ece2;
+  border: 1px solid #e5cdb6;
+  padding: 8px 10px;
+  border-radius: 4px;
+}
+.cam-warn b {
+  font-weight: 600;
+}
+.cam-warn .text-btn {
+  color: #8a5530;
+  font-weight: 600;
+  padding: 2px 4px;
+}
+.cam-mode {
+  margin-top: 2px;
+}
+.cam-hint {
+  font-size: 8px;
+  line-height: 1.7;
+  color: #91a08f;
+}
+.camera-panel .action-row {
+  margin-top: 4px;
+}
+.photo-tray,
+.photo-album {
+  margin-top: 18px;
+  border-top: 1px solid #e3eae4;
+  padding-top: 14px;
+}
+.tray-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.tray-head strong {
+  font-size: 11px;
+  font-weight: 600;
+  color: #54766b;
+}
+.tray-head .text-btn {
+  color: #8a6a5a;
+}
+.tray-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+.tray-grid figure {
+  margin: 0;
+  background: #f2f5f0;
+  border: 1px solid #e0e8de;
+  border-radius: 5px;
+  padding: 6px;
+  position: relative;
+}
+.tray-grid figure.is-cover {
+  border-color: #b3cba8;
+  box-shadow: 0 0 0 2px #dce8d2 inset;
+}
+.photo-view {
+  display: block;
+  width: 100%;
+  aspect-ratio: 5 / 3;
+  object-fit: cover;
+  border-radius: 3px;
+  background: #33555e;
+}
+.photo-view.developing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 9px;
+  color: #cfe0d4;
+  background: linear-gradient(110deg, #33555e 30%, #4a7078 50%, #33555e 70%);
+  background-size: 200% 100%;
+  animation: develop 1.6s linear infinite;
+}
+.photo-view.developing span {
+  width: 22px;
+  height: 22px;
+  border: 2px solid #cfe0d4;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes develop {
+  to {
+    background-position: -200% 0;
+  }
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.find-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+.find-chip {
+  font-size: 8px;
+  padding: 3px 6px;
+  border-radius: 3px;
+  background: #e4eae2;
+  color: #6b7f74;
+}
+.find-chip.clear {
+  background: #dce9d4;
+  color: #4c795c;
+  font-weight: 600;
+}
+.find-chip.partial {
+  background: #eee9d8;
+  color: #8a7346;
+}
+.no-find {
+  display: block;
+  font-size: 8px;
+  color: #9aaca0;
+  margin-top: 6px;
+}
+.tray-grid figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  margin-top: 6px;
+}
+.tray-grid figcaption .text-btn {
+  padding: 2px 0;
+}
+.cover-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-size: 8px;
+  font-style: normal;
+  background: #4c795c;
+  color: #eef4e6;
+  padding: 3px 7px;
+  border-radius: 3px;
+  letter-spacing: 1px;
+}
+.cover-badge.pending {
+  background: #8a7346;
+}
+.tray-note {
+  font-size: 8px;
+  color: #97a89b;
+  margin-top: 10px;
+  line-height: 1.7;
+}
+.album-empty {
+  font-size: 10px;
+  color: #91a58f;
+  padding: 18px 0 8px;
+}
+/* 图鉴封面 */
+.cover-slot {
+  margin-top: 14px;
+}
+.cover-slot .cover-img {
+  border: 1px solid #d8e2d6;
+  border-radius: 5px;
+}
+.cover-slot .photo-view.developing {
+  aspect-ratio: 5 / 3;
+}
+.cover-caption {
+  display: block;
+  font-size: 8px;
+  color: #8b9d90;
+  margin-top: 6px;
+  letter-spacing: 0.5px;
+}
+.cover-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 22px 10px;
+  border: 1px dashed #c3d2c4;
+  border-radius: 5px;
+  color: #8aa092;
+  font-size: 10px;
+}
+.cover-empty small {
+  font-size: 8px;
+  color: #a3b3a6;
+}
+.cam-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 7px;
+  font-style: normal;
+  color: #8a7346;
+  background: #eee9d8;
+  padding: 2px 5px;
+  border-radius: 3px;
+  margin-top: 5px;
+}
+.cam-mark.clear {
+  color: #4c795c;
+  background: #dce9d4;
+}
+@media (max-width: 1180px) {
+  .camera-body {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 640px) {
+  .camera-panel {
+    padding: 14px 12px;
+  }
+  .tray-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 8px;
+  }
+  .vf-hud span {
+    font-size: 8px;
+    padding: 3px 6px;
+  }
+}
+

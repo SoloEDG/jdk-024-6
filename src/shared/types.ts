@@ -31,6 +31,92 @@ export interface JournalEntry {
   best: number;
   first: number;
 }
+export type Clarity = "clear" | "partial" | "glimpse";
+export interface CamSettings {
+  focal: number;
+  focus: number;
+  pan: number;
+  exposure: number;
+  precision: number;
+  mode: "single" | "burst";
+  burst: number;
+}
+export interface CamKey {
+  t: number;
+  focal: number;
+  focus: number;
+  pan: number;
+}
+export interface ShootState {
+  start: number;
+  frames: number;
+  frameDur: number;
+  done: number;
+  precision: number;
+  keys: CamKey[];
+  spot: SpotId;
+  seed: number;
+}
+export interface CameraState {
+  settings: CamSettings;
+  sceneSeed: number;
+  sceneClock: number;
+  shooting: ShootState | null;
+  pending: Photo[];
+}
+export interface WeedParams {
+  u: number;
+  z: number;
+  h: number;
+  sw: number;
+  per: number;
+  ph: number;
+}
+export interface TrackRec {
+  sp: FishId;
+  z: number;
+  len: number;
+  dir: 1 | -1;
+  u: number[];
+  w: number[];
+  oc: number[];
+}
+export interface ExposureRecord {
+  v: 1;
+  seed: number;
+  spot: SpotId;
+  t0: number;
+  takenAt: number;
+  T: number;
+  dt: number;
+  n: number;
+  fi: number;
+  fc: number;
+  cam: { pan: number[]; fo: number[]; fc: number[] };
+  weeds: WeedParams[];
+  tracks: TrackRec[];
+}
+export interface Finding {
+  sp: FishId;
+  clarity: Clarity;
+  parts: number;
+  visibleTime: number;
+  coverage: number;
+  blur: number;
+}
+export interface Photo {
+  id: string;
+  ready: boolean;
+  developAt: number;
+  bytes: number;
+  record: ExposureRecord;
+  findings: Finding[];
+  coverWhenReady?: number;
+}
+export interface PhotoMark {
+  clarity: Clarity;
+  photoId: string;
+}
 export interface GameDocument {
   version: 1;
   spot: SpotId;
@@ -43,6 +129,10 @@ export interface GameDocument {
   journal: Partial<Record<FishId, JournalEntry>>;
   stats: { casts: number; catches: number; escapes: number; released: number };
   claimed: string[];
+  photos: Photo[];
+  cover: { photoId: string; seq: number } | null;
+  photoSeq: number;
+  photographed: Partial<Record<FishId, PhotoMark>>;
 }
 export interface Session {
   id: string;
@@ -68,5 +158,6 @@ export interface Session {
 export interface Workspace {
   doc: GameDocument;
   session: Session;
+  camera: CameraState;
   notice: string;
 }

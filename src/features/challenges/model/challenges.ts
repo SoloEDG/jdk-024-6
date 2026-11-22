@@ -1,4 +1,5 @@
 import type { GameDocument } from "../../../shared/types";
+import { clearSpecies } from "../../camera";
 export interface Challenge {
   id: string;
   name: string;
@@ -19,6 +20,15 @@ export const challenges: Challenge[] = [
     measure: (d) => d.stats.catches,
   },
   {
+    id: "lens-first",
+    unlockAt: 0,
+    name: "镜头下的初遇",
+    description: "用水下镜头清晰识别 1 个鱼种",
+    target: 1,
+    reward: "取景徽章",
+    measure: (d) => clearSpecies(d).length,
+  },
+  {
     id: "explorer",
     unlockAt: 1,
     name: "溪流来信",
@@ -35,6 +45,24 @@ export const challenges: Challenge[] = [
     target: 3,
     reward: "博物手记",
     measure: (d) => Object.keys(d.journal).length,
+  },
+  {
+    id: "lens-collector",
+    unlockAt: 0,
+    name: "水下目击者",
+    description: "清晰识别 3 个不同鱼种",
+    target: 3,
+    reward: "微距镜头",
+    measure: (d) => clearSpecies(d).length,
+  },
+  {
+    id: "cover-story",
+    unlockAt: 0,
+    name: "封面故事",
+    description: "将一张水下照片设为图鉴封面",
+    target: 1,
+    reward: "主编徽章",
+    measure: (d) => (d.cover ? 1 : 0),
   },
   {
     id: "deep",

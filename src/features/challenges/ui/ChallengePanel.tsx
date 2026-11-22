@@ -27,7 +27,7 @@ export function ChallengePanel({
         </button>
       </div>
       <div className="challenge-list">
-        {challenges.slice(0, expanded ? 5 : 2).map((c) => {
+        {challenges.slice(0, expanded ? challenges.length : 2).map((c) => {
           const n = challengeProgress(doc, c.id);
           const claimed = doc.claimed.includes(c.id);
           const open = doc.stats.catches >= c.unlockAt;

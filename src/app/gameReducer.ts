@@ -1,6 +1,7 @@
 import type { Workspace } from "../shared/types";
 import type { Command } from "../shared/commands";
 import { idleSession, isBusy } from "../shared/initial";
+import { random } from "../shared/random";
 import { selectWater } from "../features/waters";
 import {
   chooseBait,
@@ -13,12 +14,29 @@ import {
 import { prepareCast, tickSession, strike } from "../features/fishing";
 import { landCatch, releaseCatch } from "../features/collection";
 import { claimReward } from "../features/challenges";
+import {
+  camSet,
+  camShutter,
+  camCancel,
+  camTick,
+  trayClose,
+  reseedCamera,
+  acceptPhoto,
+  setCover,
+  removePhoto,
+  markDeveloped,
+} from "../features/camera";
 export function gameReducer(state: Workspace, c: Command): Workspace {
-  const { doc, session: s } = state;
+  const { doc, session: s, camera } = state;
   const busy = isBusy(s);
   switch (c.type) {
-    case "spot":
-      return busy ? state : { ...state, doc: selectWater(doc, c.id) };
+    case "spot": {
+      if (busy || camera.shooting) return state;
+      const next = selectWater(doc, c.id);
+      return next === doc
+        ? state
+        : { ...state, doc: next, camera: reseedCamera(camera, doc, c.id) };
+    }
     case "bait":
       return busy ? state : { ...state, doc: chooseBait(doc, c.id) };
     case "power":
@@ -71,17 +89,26 @@ export function gameReducer(state: Workspace, c: Command): Workspace {
         ? { ...state, session: { ...s, reeling: c.held } }
         : state;
     case "tick": {
-      const next = tickSession(s, doc, Math.min(0.1, Math.max(0, c.dt)));
-      if (next === s) return state;
+      const dt = Math.min(0.1, Math.max(0, c.dt));
+      const next = tickSession(s, doc, dt);
+      let seed = doc.seed;
+      const rand = () => {
+        const [r, n] = random(seed);
+        seed = n;
+        return r;
+      };
+      const camNext = camTick(camera, dt, Date.now(), rand);
       let updated = doc;
       if (next.phase === "landed" && s.phase !== "landed")
         updated = landCatch(doc, next, Date.now());
       if (next.phase === "escaped" && s.phase !== "escaped")
         updated = {
-          ...doc,
-          stats: { ...doc.stats, escapes: doc.stats.escapes + 1 },
+          ...updated,
+          stats: { ...updated.stats, escapes: updated.stats.escapes + 1 },
         };
-      return { ...state, doc: updated, session: next };
+      if (seed !== doc.seed) updated = { ...updated, seed };
+      if (next === s && camNext === camera && updated === doc) return state;
+      return { ...state, doc: updated, session: next, camera: camNext };
     }
     case "next":
       return s.phase === "landed" || s.phase === "escaped"
@@ -91,5 +118,60 @@ export function gameReducer(state: Workspace, c: Command): Workspace {
       return { ...state, doc: releaseCatch(doc, c.id) };
     case "claim":
       return { ...state, doc: claimReward(doc, c.id) };
+    case "cam-set":
+      return { ...state, camera: camSet(camera, c.patch) };
+    case "cam-shutter": {
+      const r = camShutter(camera, doc.spot);
+      return r.cam === camera && !r.notice
+        ? state
+        : { ...state, camera: r.cam, notice: r.notice || state.notice };
+    }
+    case "cam-cancel": {
+      const r = camCancel(camera);
+      return { ...state, camera: r.cam, notice: r.notice || state.notice };
+    }
+    case "tray-close": {
+      const r = trayClose(camera);
+      return r.cam === camera ? state : { ...state, camera: r.cam, notice: r.notice };
+    }
+    case "frame-developed": {
+      if (camera.pending.some((p) => p.id === c.id))
+        return {
+          ...state,
+          camera: {
+            ...camera,
+            pending: camera.pending.map((p) =>
+              p.id === c.id ? { ...p, ready: true } : p,
+            ),
+          },
+        };
+      const r = markDeveloped(doc, c.id);
+      return r.doc === doc
+        ? state
+        : { ...state, doc: r.doc, notice: r.notice || state.notice };
+    }
+    case "photo-accept": {
+      const photo = camera.pending.find((p) => p.id === c.id);
+      if (!photo) return state;
+      const r = acceptPhoto(doc, photo, c.cover);
+      return {
+        ...state,
+        doc: r.doc,
+        camera: { ...camera, pending: camera.pending.filter((p) => p.id !== c.id) },
+        notice: r.notice,
+      };
+    }
+    case "photo-cover": {
+      const next = setCover(doc, c.id);
+      return next === doc
+        ? state
+        : { ...state, doc: next, notice: "已设为图鉴封面。" };
+    }
+    case "photo-remove": {
+      const next = removePhoto(doc, c.id);
+      return next === doc
+        ? state
+        : { ...state, doc: next, notice: "照片已移除，图像已释放。" };
+    }
   }
 }

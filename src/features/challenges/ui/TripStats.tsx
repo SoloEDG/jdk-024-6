@@ -1,4 +1,5 @@
 import type { GameDocument } from "../../../shared/types";
+import { clearSpecies } from "../../camera";
 export function TripStats({ doc }: { doc: GameDocument }) {
   return (
     <div className="trip-stats">
@@ -13,6 +14,10 @@ export function TripStats({ doc }: { doc: GameDocument }) {
       <div>
         <strong>{String(doc.stats.released).padStart(2, "0")}</strong>
         <span>已放流</span>
+      </div>
+      <div>
+        <strong>{String(clearSpecies(doc).length).padStart(2, "0")}</strong>
+        <span>镜头识别</span>
       </div>
     </div>
   );

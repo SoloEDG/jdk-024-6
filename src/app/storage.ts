@@ -1,12 +1,96 @@
 import { newDocument } from "../shared/initial";
 import { fishCatalog } from "../shared/catalog";
-import type { GameDocument } from "../shared/types";
+import type { FishId, GameDocument, Photo, PhotoMark } from "../shared/types";
+import { identify } from "../features/camera/model/identify";
 const key = "stillwater-jdk024-v1";
+const spots = ["reed", "brook", "deep"];
+const fishIds = fishCatalog.map((f) => f.id);
+function validPhoto(p: unknown): p is Photo {
+  if (!p || typeof p !== "object") return false;
+  const ph = p as Photo;
+  const r = ph.record;
+  if (
+    typeof ph.id !== "string" ||
+    typeof ph.ready !== "boolean" ||
+    !Number.isFinite(ph.developAt) ||
+    !Number.isFinite(ph.bytes) ||
+    !r ||
+    r.v !== 1 ||
+    !spots.includes(r.spot) ||
+    ![r.seed, r.t0, r.takenAt, r.T, r.dt].every(Number.isFinite) ||
+    r.T <= 0 ||
+    r.dt <= 0 ||
+    !Number.isInteger(r.n) ||
+    r.n < 2 ||
+    r.n > 20000 ||
+    !Number.isInteger(r.fi) ||
+    !Number.isInteger(r.fc) ||
+    !r.cam ||
+    ![r.cam.pan, r.cam.fo, r.cam.fc].every(
+      (a) => Array.isArray(a) && a.length === r.n && a.every(Number.isFinite),
+    ) ||
+    !Array.isArray(r.weeds) ||
+    r.weeds.length > 6 ||
+    !Array.isArray(r.tracks) ||
+    r.tracks.length > 8 ||
+    !Array.isArray(ph.findings)
+  )
+    return false;
+  return r.tracks.every(
+    (t) =>
+      t &&
+      fishIds.includes(t.sp) &&
+      (t.dir === 1 || t.dir === -1) &&
+      [t.z, t.len].every(Number.isFinite) &&
+      [t.u, t.w, t.oc].every((a) => Array.isArray(a) && a.length === r.n),
+  );
+}
+function normalizePhotos(
+  d: GameDocument,
+): Pick<GameDocument, "photos" | "cover" | "photoSeq" | "photographed"> {
+  const raw = Array.isArray(d.photos) ? d.photos : [];
+  const photos = raw
+    .filter(validPhoto)
+    .slice(0, 12)
+    .map((p) => ({
+      ...p,
+      ready: p.ready || p.developAt <= Date.now(),
+      // 识别结论始终由曝光记录重建，保证与画面一致
+      findings: identify(p.record),
+    }));
+  const photographed: GameDocument["photographed"] = {};
+  for (const [id, m] of Object.entries(d.photographed ?? {})) {
+    if (!fishIds.includes(id as FishId) || !m || typeof m !== "object") continue;
+    const clarity = (m as PhotoMark).clarity;
+    if (clarity === "clear" || clarity === "partial" || clarity === "glimpse")
+      photographed[id as FishId] = {
+        clarity,
+        photoId: String((m as PhotoMark).photoId ?? ""),
+      };
+  }
+  let photoSeq = Number.isInteger(d.photoSeq) ? d.photoSeq : 0;
+  let cover =
+    d.cover && typeof d.cover.photoId === "string" && Number.isInteger(d.cover.seq)
+      ? { photoId: d.cover.photoId, seq: d.cover.seq }
+      : null;
+  // 离开期间完成冲印的照片按请求顺序补设封面；迟到照片不覆盖更晚的选择
+  for (const p of photos) {
+    if (typeof p.coverWhenReady === "number")
+      photoSeq = Math.max(photoSeq, p.coverWhenReady);
+    if (
+      p.ready &&
+      p.coverWhenReady !== undefined &&
+      (!cover || cover.seq < p.coverWhenReady)
+    )
+      cover = { photoId: p.id, seq: p.coverWhenReady };
+  }
+  if (cover) photoSeq = Math.max(photoSeq, cover.seq);
+  if (cover && !photos.some((p) => p.id === cover!.photoId)) cover = null;
+  return { photos, cover, photoSeq, photographed };
+}
 function valid(value: unknown): value is GameDocument {
   if (!value || typeof value !== "object") return false;
   const d = value as GameDocument;
-  const fishIds = fishCatalog.map((f) => f.id);
-  const spots = ["reed", "brook", "deep"];
   const baits = ["worm", "corn", "fly"];
   return (
     d.version === 1 &&
@@ -52,7 +136,13 @@ function valid(value: unknown): value is GameDocument {
         e.count > 0 &&
         Number.isFinite(e.best) &&
         Number.isFinite(e.first),
-    )
+    ) &&
+    Array.isArray(d.photos) &&
+    (d.cover === null ||
+      (typeof d.cover.photoId === "string" && Number.isInteger(d.cover.seq))) &&
+    Number.isInteger(d.photoSeq) &&
+    !!d.photographed &&
+    typeof d.photographed === "object"
   );
 }
 export function loadGame(): { doc: GameDocument; notice: string; recovery?: true } {
@@ -60,8 +150,12 @@ export function loadGame(): { doc: GameDocument; notice: string; recovery?: true
     const raw = localStorage.getItem(key);
     if (!raw) return { doc: newDocument(), notice: "" };
     const parsed: unknown = JSON.parse(raw);
-    return valid(parsed)
-      ? { doc: parsed, notice: "" }
+    const merged =
+      parsed && typeof parsed === "object"
+        ? { ...(parsed as GameDocument), ...normalizePhotos(parsed as GameDocument) }
+        : parsed;
+    return valid(merged)
+      ? { doc: merged, notice: "" }
       : {
           doc: newDocument(),
           notice: "本地手记格式或版本无法读取，已保留原手记并开启临时游玩。",
